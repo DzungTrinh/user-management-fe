@@ -2,20 +2,8 @@ import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
-import { environment } from '../../environments/environments';
-
-
-interface LoginDto {
-  email: string;
-  password: string;
-  rememberDevice: boolean;
-}
-
-interface LoginResponse {
-  accessToken: string;          // JWT (or opaque) for API calls
-  mfaRequired: boolean;
-  deviceId?: string;            // returned on successful MFA or first login
-}
+import { environment } from '../../../../environments/environments';
+import { LoginDto, LoginResponse } from '../models/login';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {

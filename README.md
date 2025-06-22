@@ -57,3 +57,44 @@ Angular CLI does not come with an end-to-end testing framework by default. You c
 ## Additional Resources
 
 For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+# Angular Repository Structure
+
+- **src/**
+  - **app/**
+    - **core/**: Singleton services, guards, interceptors
+      - **auth/**: Auth service, interceptors, etc.
+      - **interceptors/**
+      - **guards/**
+      - **core.module.ts**: (if using NgModule for legacy parts)
+    - **shared/**: Reusable components, directives, pipes
+      - **components/**: (e.g. Button, Card, InputField)
+      - **directives/**
+      - **pipes/**
+      - **shared.module.ts**: (optional if not using standalone)
+    - **features/**: Feature-based modules/screens
+      - **auth/**: Login, register, email verification
+        - **login/**
+          - **login.component.ts**
+          - **login.component.html**
+          - **login.component.css**
+          - **route.ts**: standalone route
+        - **register/**: …
+        - **auth.routes.ts**
+      - **profile/**: Profile management
+      - **mfa/**: MFA setup + verification
+      - **roles/**: Admin role management
+      - **permissions/**: Admin permission management
+      - **…**
+    - **layout/**: Global layout components
+      - **header/**
+      - **sidebar/**
+      - **layout.component.ts**
+    - **app.routes.ts**: Top-level routes
+    - **app.component.ts**: Root component
+    - **app.config.ts**: Standalone AppConfig
+  - **assets/**: Static assets (e.g. logo, icons)
+  - **environments/**: environment.ts, environment.prod.ts
+  - **index.html**
+  - **main.ts**
+  - **styles.css**: Global styles

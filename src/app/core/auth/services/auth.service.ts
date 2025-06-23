@@ -3,47 +3,55 @@ import { HttpClient } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 import { environment } from '../../../../environments/environments';
-import { LoginDto, LoginResponse } from '../models/login';
+import { LoginDto } from '../models/login';
+import { clearTokens, getAccessToken, getRefreshToken, setTokens } from '../utils/token-storage';
+import { TokenResponse } from '../models/token';
+import { RegisterDto } from '../models/register';
+import { throwError } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  /** holds JWT so interceptor can read it */
-  token = signal<string | null>(null);
+  accessToken = signal<string | null>(getAccessToken());
+  refreshToken = signal<string | null>(getRefreshToken());
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  /** POST /auth/login  */
   login(dto: LoginDto) {
-    return this.http
-      .post<LoginResponse>(`${environment.apiBase}/auth/login`, dto)
-      .pipe(
-        tap(res => {
-          if (res.deviceId) {
-            // store deviceId cookie for future “trusted device” checks
-            document.cookie = `device_id=${res.deviceId}; Secure; SameSite=Strict`;
-          }
-
-          if (res.mfaRequired) {
-            // store temp token if backend issues a short‑lived pre‑MFA token
-            this.token.set(res.accessToken);
-            this.router.navigate(['/mfa']);
-          } else {
-            this.finishLogin(res.accessToken);
-          }
-        })
-      );
+    return this.http.post<TokenResponse>(`${environment.apiBase}/login`, dto).pipe(
+      tap(res => this.finishAuth(res))
+    );
   }
 
-  /** Called after MFA passes or when MFA not required */
-  finishLogin(accessToken: string) {
-    this.token.set(accessToken);
-    localStorage.setItem('accessToken', accessToken);    // optional “remember me”
-    this.router.navigate(['/dashboard']);
+  register(dto: RegisterDto) {
+    return this.http.post<TokenResponse>(`${environment.apiBase}/register`, dto).pipe(
+      tap(res => this.finishAuth(res))
+    );
   }
 
   logout() {
-    this.token.set(null);
-    localStorage.removeItem('accessToken');
+    clearTokens();
+    this.accessToken.set(null);
+    this.refreshToken.set(null);
     this.router.navigate(['/login']);
+  }
+
+  /** called by refresh.interceptor on 401 */
+  refresh() {
+    const refresh_token = getRefreshToken();
+    if (!refresh_token) return throwError(() => new Error('No refresh token'));
+    return this.http
+      .post<TokenResponse>(`${environment.apiBase}/refresh`, { refresh_token })
+      .pipe(tap(res => this.finishAuth(res)));
+  }
+
+  private finishAuth(res: TokenResponse) {
+    setTokens(res.access_token, res.refresh_token);
+    this.accessToken.set(res.access_token);
+    this.refreshToken.set(res.refresh_token);
+    if (res.mfaRequired) {
+      this.router.navigate(['/mfa']);
+    } else {
+      this.router.navigate(['/dashboard']);
+    }
   }
 }

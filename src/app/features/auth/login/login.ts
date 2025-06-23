@@ -55,7 +55,7 @@ export class LoginComponent {
       })
       .subscribe({
         next: () => (this.loading = false),
-        error: err => {
+        error: (err) => {
           this.errorMsg = err?.error?.message ?? 'Login failed';
           this.loading = false;
         },

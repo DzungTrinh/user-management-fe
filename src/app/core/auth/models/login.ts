@@ -3,9 +3,3 @@ export interface LoginDto {
   password: string;
   rememberDevice: boolean;
 }
-
-export interface LoginResponse {
-  accessToken: string;
-  mfaRequired: boolean;
-  deviceId?: string;
-}
